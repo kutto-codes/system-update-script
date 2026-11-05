@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# update - full Debian system update
+
+GREEN="\033[1;32m"; YELLOW="\033[1;33m"; RED="\033[1;31m"; RESET="\033[0m"
+step() { echo -e "\n${YELLOW}==> $1${RESET}"; }
+
+if ! ping -c1 -W3 deb.debian.org >/dev/null 2>&1; then
+    echo -e "${RED}No internet connection. Aborting.${RESET}"
+    exit 1
+fi
+
+step "Refreshing package lists"
+sudo apt update || exit 1
+
+step "Packages that will be upgraded"
+apt list --upgradable 2>/dev/null | tail -n +2
+
+step "Upgrading packages"
+sudo apt full-upgrade -y
+
+step "Removing unused packages"
+sudo apt autoremove -y
+
+step "Clearing old package files"
+sudo apt autoclean
+
+if [ -f /var/run/reboot-required ]; then
+    echo -e "\n${RED}A reboot is required to finish the update.${RESET}"
+else
+    echo -e "\n${GREEN}All done. System is up to date.${RESET}"
+fi
